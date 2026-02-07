@@ -8,18 +8,12 @@ set -euo pipefail
 # Banner dense style mirip Dracos (hijau border + merah teks, Pango markup untuk Zenity)
 LEAKOS_BANNER_PANGO="
 <span foreground='#00ff00'>╔════════════════════════════════════════════════════════════╗</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'><b>L E A K O S   L I N U X</b></span>                               <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>██╗     ███████╗ █████╗ ██╗  ██╗ ██████╗ ███████╗</span>          <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>██║     ██╔════╝██╔══██╗██║ ██╔╝██╔════╝ ██╔════╝</span>          <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>██║     █████╗  ███████║█████╔╝ ██║  ███╗█████╗  </span>           <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>██║     ██╔══╝  ██╔══██║██╔═██╗ ██║   ██║██╔══╝  </span>           <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>███████╗███████╗██║  ██║██║  ██╗╚██████╔╝███████╗</span>          <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>  <span foreground='red'>╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝</span>          <span foreground='#00ff00'>║</span>
-<span foreground='#00ff00'>║</span>     <span foreground='red'>Unleashed Freedom • Privacy First • Pentest Ready</span>      <span foreground='#00ff00'>║</span>
+<span foreground='#00ff00'>║</span>                  <span foreground='red'><b>L E A K O S   L I N U X</b></span>                  <span foreground='#00ff00'>║</span>
+<span foreground='#00ff00'>║</span>     <span foreground='red'>Unleashed Freedom • Privacy First • Indonesian Root</span>     <span foreground='#00ff00'>║</span>
+<span foreground='#00ff00'>║</span>          <span foreground='red'>Custom LFS Distro - Pentest / Developer Ready</span>           <span foreground='#00ff00'>║</span>
 <span foreground='#00ff00'>╚════════════════════════════════════════════════════════════╝</span>
 
-<span foreground='#00ff00'> LeakOS v1.x (C) 2025-2026 leakos.dev | Indonesian Custom Distro</span>
-"
+<span foreground='#00ff00'> LeakOS v1.x (C) 2025-2026 leakos.dev | Built on LFS</span>"
 
 # Pastikan dijalankan sebagai root
 if [ "$(id -u)" -ne 0 ]; then
