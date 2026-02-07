@@ -120,7 +120,7 @@ TIMEZONE=$(zenity --list --title="LeakOS - Zona Waktu" --width=550 --height=500 
     mkdir -p /mnt/target/{boot,dev,proc,sys,run,tmp} && chmod 1777 /mnt/target/tmp
 
     mkdir -p /mnt/target/boot
-    cp -a /boot/{vmlinuz*,grub} /mnt/target/boot/ 2>/dev/null || true
+    cp -a /boot/{vmlinuz*,System.map*,grub} /mnt/target/boot/ 2>/dev/null || true
 
     echo "50"; echo "# ${LEAKOS_BANNER_PANGO}\nSetup fstab..."
     UUID=$(blkid -s UUID -o value "${TARGET_PART}")
