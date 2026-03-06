@@ -826,15 +826,20 @@ ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc --utc || true
 
 
-
 cat > /etc/fstab <<EOT
-UUID=$ROOT_UUID / ext4 defaults 0 1
+# LeakOS Shadow Fstab
+UUID=$(blkid -s UUID -o value "$ROOT_PART") / ext4 defaults 0 1
+EOF
+[ -n "$HOME_PART" ] && echo "UUID=$(blkid -s UUID -o value "$HOME_PART") /home ext4 defaults 0 2" >> /etc/fstab
+[ -n "$EFI_PART" ] && echo "UUID=$(blkid -s UUID -o value "$EFI_PART") /boot/efi vfat defaults 0 2" >> /etc/fstab
+[ -n "$SWAP_PART" ] && echo "UUID=$(blkid -s UUID -o value "$SWAP_PART") swap swap defaults 0 0" >> /etc/fstab
+cat >> /etc/fstab <<EOT
 tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
-tmpfs /run tmpfs defaults,noatime,mode=0755,nodev,nosuid 0 0
 proc /proc proc defaults 0 0
 sysfs /sys sysfs defaults 0 0
-devpts   /dev/pts   devpts   gid=5,mode=620   0 0
+devpts /dev/pts devpts gid=5,mode=620 0 0
 EOT
+
 
 cat > /etc/hosts <<EOT
 127.0.0.1 localhost
