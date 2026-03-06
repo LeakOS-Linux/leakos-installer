@@ -81,6 +81,59 @@ if [[ "${confirm,,}" != "yes" ]]; then
     exit 0
 fi
 
+
+# =============================================================================
+# DISK SELECTION - CYBERPUNK STYLE
+# =============================================================================
+echo -e ""
+echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║               SHADOW DISK SELECTION PROTOCOL              ║${NC}"
+echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
+echo -e ""
+
+echo -e "${BLUE}Disk fisik yang terdeteksi:${NC}"
+echo "------------------------------------------------------------"
+
+disk_list=()
+i=1
+while IFS= read -r line; do
+    name=$(echo "$line" | awk '{print $1}')
+    size=$(echo "$line" | awk '{print $2}')
+    model=$(echo "$line" | awk '{$1=$2=""; print substr($0,3)}' | xargs || echo "Unknown")
+    printf " ${GREEN}%2d)${NC} /dev/${CYAN}%-6s${NC} (%6s) - %s\n" "$i" "$name" "$size" "$model"
+    disk_list+=("/dev/$name")
+    ((i++))
+done < <(lsblk -dno NAME,SIZE,MODEL | awk '$1~/^[a-z]+$/ && $1!="loop" && $1!="sr" && $1!="zram" && $1!="nvme[0-9]+n[0-9]+"')
+
+if [ ${#disk_list[@]} -eq 0 ]; then
+    echo -e "${RED}ERROR: Tidak ada disk fisik yang terdeteksi.${NC}"
+    exit 1
+fi
+
+if [ ${#disk_list[@]} -eq 1 ]; then
+    echo -e "${GREEN}(Hanya 1 disk terdeteksi → otomatis dipilih)${NC}"
+    TARGET_DISK="${disk_list[0]}"
+else
+    echo -e ""
+    echo -en "${YELLOW}Pilih nomor disk target (1-${#disk_list[@]}) : ${NC}"
+    read -r disk_num
+    if ! [[ "$disk_num" =~ ^[0-9]+$ ]] || [ "$disk_num" -lt 1 ] || [ "$disk_num" -gt "${#disk_list[@]}" ]; then
+        echo -e "${RED}ERROR: Nomor tidak valid.${NC}"
+        exit 1
+    fi
+    TARGET_DISK="${disk_list[$((disk_num-1))]}"
+fi
+
+echo -e ""
+echo -e "Disk terpilih : ${RED}${BOLD}${TARGET_DISK}${NC}"
+echo -e "${RED}SEMUA DATA AKAN HILANG SELAMANYA!${NC}"
+echo -en "${YELLOW}Yakin ingin lanjut? (ketik 'yes') : ${NC}"
+read -r confirm_disk
+if [[ "${confirm_disk,,}" != "yes" ]]; then
+    echo -e "${GREEN}Dibatalkan.${NC}"
+    exit 0
+fi
+
 # =============================================================================
 # SHADOW PARTITIONING - MBR / LEGACY BIOS ONLY (NO UEFI)
 # =============================================================================
