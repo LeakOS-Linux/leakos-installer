@@ -18,12 +18,13 @@ if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null |
     YELLOW='\033[1;33m'
     BLUE='\033[0;34m'
     CYAN='\033[0;36m'
+    MAGENTA='\033[0;35m'
     BLINK='\033[5m'  # <-- TAMBAHKAN INI
     BOLD='\033[1m'
     NC='\033[0m'
     RESET='\033[0m'
 else
-    RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BLINK='' BOLD='' NC='' RESET=''
+    RED='' GREEN='' YELLOW='' BLUE='' CYAN='' MAGENTA='' BLINK='' BOLD='' NC='' RESET=''
 fi
 
 clear
@@ -279,9 +280,6 @@ read -r confirm_part
 # =============================================================================
 echo -e "${BLUE}Mounting partisi...${NC}"
 mkdir -p /mnt/leakos
-
-mount "$ROOT_PART" /mnt/leakos
-
 [ -n "$HOME_PART" ] && { mkdir -p /mnt/leakos/home; mount "$HOME_PART" /mnt/leakos/home; }
 [ -n "$SWAP_PART" ] && swapon "$SWAP_PART"
 
