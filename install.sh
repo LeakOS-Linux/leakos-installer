@@ -841,12 +841,23 @@ ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc --utc || true
 
 
+# Buat fstab dengan multiple partisi
 cat > /etc/fstab <<EOT
 # LeakOS Shadow Fstab
 UUID=$(blkid -s UUID -o value "$ROOT_PART") / ext4 defaults 0 1
-EOF
-[ -n "$HOME_PART" ] && echo "UUID=$(blkid -s UUID -o value "$HOME_PART") /home ext4 defaults 0 2" >> /etc/fstab
-[ -n "$SWAP_PART" ] && echo "UUID=$(blkid -s UUID -o value "$SWAP_PART") swap swap defaults 0 0" >> /etc/fstab
+EOT
+
+# Tambah home partition kalau ada
+if [ -n "$HOME_PART" ]; then
+    echo "UUID=$(blkid -s UUID -o value "$HOME_PART") /home ext4 defaults 0 2" >> /etc/fstab
+fi
+
+# Tambah swap kalau ada
+if [ -n "$SWAP_PART" ]; then
+    echo "UUID=$(blkid -s UUID -o value "$SWAP_PART") swap swap defaults 0 0" >> /etc/fstab
+fi
+
+# Tambah tmpfs, proc, sysfs, devpts
 cat >> /etc/fstab <<EOT
 tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
 proc /proc proc defaults 0 0
