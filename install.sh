@@ -842,20 +842,26 @@ ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc --utc || true
 
 
-# Buat fstab dengan multiple partisi
+# =============================================================================
+# MEMBUAT FSTAB OTOMATIS BERDASARKAN PARTISI YANG TERMOUNT
+# =============================================================================
 cat > /etc/fstab <<EOT
-# LeakOS Shadow Fstab
-UUID=$(blkid -s UUID -o value "$ROOT_PART") / ext4 defaults 0 1
+# LeakOS Shadow Fstab - Auto Generated
 EOT
 
-# Tambah home partition kalau ada
-if [ -n "$HOME_PART" ]; then
-    echo "UUID=$(blkid -s UUID -o value "$HOME_PART") /home ext4 defaults 0 2" >> /etc/fstab
+# Root partition (pasti ada)
+echo "UUID=$(blkid -s UUID -o value /) / ext4 defaults 0 1" >> /etc/fstab
+
+# Cek dan tambah home partition kalau ada
+if mount | grep -q "/home"; then
+    HOME_DEV=$(mount | grep "/home" | cut -d' ' -f1)
+    echo "UUID=$(blkid -s UUID -o value $HOME_DEV) /home ext4 defaults 0 2" >> /etc/fstab
 fi
 
-# Tambah swap kalau ada
-if [ -n "$SWAP_PART" ]; then
-    echo "UUID=$(blkid -s UUID -o value "$SWAP_PART") swap swap defaults 0 0" >> /etc/fstab
+# Cek dan tambah swap kalau aktif
+if swapon --show | grep -q "/dev"; then
+    SWAP_DEV=$(swapon --show | head -1 | awk '{print $1}')
+    echo "UUID=$(blkid -s UUID -o value $SWAP_DEV) swap swap defaults 0 0" >> /etc/fstab
 fi
 
 # Tambah tmpfs, proc, sysfs, devpts
