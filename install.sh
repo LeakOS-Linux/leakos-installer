@@ -135,10 +135,9 @@ echo -e ""
 
 echo -e "${BLUE}Pilih Mode Partisi (MBR/Legacy):${NC}"
 echo -e " ${GREEN}1${NC}) ${BOLD}Auto Simple${NC}      → Root + Swap + Home otomatis (rekomendasi)"
-echo -e " ${CYAN}2${NC}) ${BOLD}Advanced Manual${NC}  → Kamu atur sendiri semua partisi"
-echo -e " ${YELLOW}3${NC}) ${BOLD}cfdisk Manual${NC}    → Mode klasik (langsung buka cfdisk)"
+echo -e " ${YELLOW}2${NC}) ${BOLD}cfdisk Manual${NC}    → Mode klasik (langsung buka cfdisk)"
 echo ""
-echo -en "${YELLOW}Pilihan (1/2/3) [default: 1] : ${NC}"
+echo -en "${YELLOW}Pilihan (1/2) [default: 1] : ${NC}"
 read -r part_mode
 part_mode=${part_mode:-1}
 
@@ -174,22 +173,13 @@ EOF
         sync
         sleep 2
 
-        echo -e "${YELLOW}Kernel mungkin belum update tabel partisi karena disk sedang digunakan.${NC}"
-        echo -e "${YELLOW}Untuk melanjutkan, reboot diperlukan sekarang.${NC}"
-        echo -en "${RED}${BOLD}Reboot sekarang? (yes/no): ${NC}"
-        read -r reboot_now
-
-        if [[ "${reboot_now,,}" == "yes" ]]; then
-            echo -e "${GREEN}Rebooting... Jalankan installer lagi setelah reboot.${NC}"
-            reboot
-            exit 0  # script berhenti di sini
-        else
-            echo -e "${YELLOW}Lanjut manual... Coba force update kernel${NC}"
-            partprobe "$TARGET_DISK" || true
-            udevadm settle || true
+        
+        echo -e "${YELLOW}Lanjut manual... Coba force update kernel${NC}"
+        partprobe "$TARGET_DISK" || true
+        udevadm settle || true
             blockdev --rereadpt "$TARGET_DISK" || true
             sleep 3
-        fi
+        
 
         # Coba ambil partisi lagi (setelah force update)
         mapfile -t PARTS < <(lsblk -ln -o NAME,TYPE "$TARGET_DISK" | awk '$2=="part" {print "/dev/"$1}')
@@ -254,7 +244,6 @@ read -r confirm_part
 # MOUNTING PARTISI (MBR)
 # =============================================================================
 echo -e "${BLUE}Mounting partisi...${NC}"
-mkdir -p /mnt/leakos
 [ -n "$HOME_PART" ] && { mkdir -p /mnt/leakos/home; mount "$HOME_PART" /mnt/leakos/home; }
 [ -n "$SWAP_PART" ] && swapon "$SWAP_PART"
 
