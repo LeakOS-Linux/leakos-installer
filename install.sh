@@ -152,16 +152,16 @@ case $part_mode in
 
         echo -e ""
         echo -e "${YELLOW}Ukuran yang akan dibuat:${NC}"
-        echo -e "   Root    : 60G   (ditandai bootable)"
-        echo -e "   Swap    : 8G"
-        echo -e "   Home    : Sisanya"
+        echo -e "   Root    : 80G   (ditandai bootable)"
+        echo -e "   Swap    : 4G"
+        echo -e "   Home    : "
         echo -en "${YELLOW}Lanjut otomatis? (yes) : ${NC}"
         read -r auto_confirm
         [[ "${auto_confirm,,}" != "yes" ]] && { echo -e "${RED}Dibatalkan.${NC}"; exit 0; }
 
         # Wipe signature lama
-        wipefs -af "$TARGET_DISK" >/dev/null 2>&1
-        sync; partprobe "$TARGET_DISK"
+        wipefs -af "$TARGET_DISK" >/dev/null 2>&1 || true
+        sync
 
         # Buat tabel MBR dengan sfdisk
         sfdisk "$TARGET_DISK" << EOF
@@ -171,19 +171,48 @@ size=4G,  type=82
 size=+,   type=83
 EOF
 
-        sync; sleep 1.5; partprobe "$TARGET_DISK"; udevadm settle
+        sync
+        sleep 2
 
-        # Ambil partisi yang baru dibuat
+        echo -e "${YELLOW}Kernel mungkin belum update tabel partisi karena disk sedang digunakan.${NC}"
+        echo -e "${YELLOW}Untuk melanjutkan, reboot diperlukan sekarang.${NC}"
+        echo -en "${RED}${BOLD}Reboot sekarang? (yes/no): ${NC}"
+        read -r reboot_now
+
+        if [[ "${reboot_now,,}" == "yes" ]]; then
+            echo -e "${GREEN}Rebooting... Jalankan installer lagi setelah reboot.${NC}"
+            reboot
+            exit 0  # script berhenti di sini
+        else
+            echo -e "${YELLOW}Lanjut manual... Coba force update kernel${NC}"
+            partprobe "$TARGET_DISK" || true
+            udevadm settle || true
+            blockdev --rereadpt "$TARGET_DISK" || true
+            sleep 3
+        fi
+
+        # Coba ambil partisi lagi (setelah force update)
         mapfile -t PARTS < <(lsblk -ln -o NAME,TYPE "$TARGET_DISK" | awk '$2=="part" {print "/dev/"$1}')
+
+        if [ ${#PARTS[@]} -lt 2 ]; then
+            echo -e "${RED}Gagal mendeteksi partisi baru. Reboot diperlukan.${NC}"
+            echo -e "Jalankan installer lagi setelah reboot."
+            exit 1
+        fi
 
         ROOT_PART="${PARTS[0]}"
         SWAP_PART="${PARTS[1]}"
-        HOME_PART="${PARTS[2]:-}"  # kalau ada sisa
+        HOME_PART="${PARTS[2]:-}"
 
-        # Format
-        mkfs.ext4 -F "$ROOT_PART" && echo -e "${GREEN}✓ Root formatted${NC}"
-        mkswap "$SWAP_PART" && echo -e "${GREEN}✓ Swap formatted${NC}"
-        [ -n "$HOME_PART" ] && mkfs.ext4 -F "$HOME_PART" && echo -e "${GREEN}✓ Home formatted${NC}"
+        echo -e "${GREEN}Partisi terdeteksi:${NC}"
+        lsblk -f "$TARGET_DISK"
+
+        # Format (paksa kalau perlu)
+        mkfs.ext4 -F "$ROOT_PART" || { echo -e "${RED}Gagal format root!${NC}"; exit 1; }
+        mkswap "$SWAP_PART" || true
+        [ -n "$HOME_PART" ] && mkfs.ext4 -F "$HOME_PART" || true
+
+        echo -e "${GREEN}✓ Formatting selesai${NC}"
         ;;
     2)
         # Mode cfdisk klasik (seperti script asli)
