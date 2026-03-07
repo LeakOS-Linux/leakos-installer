@@ -828,7 +828,6 @@ cat > /etc/fstab <<EOT
 UUID=$(blkid -s UUID -o value "$ROOT_PART") / ext4 defaults 0 1
 EOF
 [ -n "$HOME_PART" ] && echo "UUID=$(blkid -s UUID -o value "$HOME_PART") /home ext4 defaults 0 2" >> /etc/fstab
-[ -n "$EFI_PART" ] && echo "UUID=$(blkid -s UUID -o value "$EFI_PART") /boot/efi vfat defaults 0 2" >> /etc/fstab
 [ -n "$SWAP_PART" ] && echo "UUID=$(blkid -s UUID -o value "$SWAP_PART") swap swap defaults 0 0" >> /etc/fstab
 cat >> /etc/fstab <<EOT
 tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
