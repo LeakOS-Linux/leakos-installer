@@ -172,7 +172,8 @@ EOF
 
         sync
         sleep 2
-
+         umount /dev/sda* 2>/dev/null
+         swapoff /dev/sda* 2>/dev/null
         
         echo -e "${YELLOW}Lanjut manual... Coba force update kernel${NC}"
         partprobe "$TARGET_DISK" || true
