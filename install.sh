@@ -51,20 +51,6 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # =============================================================================
-# DEPENDENCY CHECK
-# =============================================================================
-echo -e "${BLUE}Memeriksa dependensi...${NC}"
-for cmd in lsblk cfdisk mkfs.ext4 rsync grub-install grub-mkconfig blkid git partprobe; do
-    if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo -e "${RED}ERROR: Tidak ditemukan perintah: $cmd${NC}"
-        echo -e "Pastikan paket yang dibutuhkan sudah terinstall di live environment."
-        exit 1
-    fi
-done
-echo -e "${GREEN}Semua dependensi OK.${NC}"
-echo -e ""
-
-# =============================================================================
 # PERINGATAN AWAL
 # =============================================================================
 echo -e "${RED}${BOLD}┌────────────────────────────────────────────────────────────┐${NC}"
@@ -180,8 +166,8 @@ case $part_mode in
         # Buat tabel MBR dengan sfdisk
         sfdisk "$TARGET_DISK" << EOF
 label: dos
-size=60G, type=83, bootable
-size=8G,  type=82
+size=80G, type=83, bootable
+size=4G,  type=82
 size=+,   type=83
 EOF
 
@@ -195,51 +181,11 @@ EOF
         HOME_PART="${PARTS[2]:-}"  # kalau ada sisa
 
         # Format
-        mkfs.ext4 -F -L "LeakOS-Root" "$ROOT_PART" && echo -e "${GREEN}✓ Root formatted${NC}"
-        mkswap -L "LeakOS-Swap" "$SWAP_PART" && echo -e "${GREEN}✓ Swap formatted${NC}"
-        [ -n "$HOME_PART" ] && mkfs.ext4 -F -L "LeakOS-Home" "$HOME_PART" && echo -e "${GREEN}✓ Home formatted${NC}"
+        mkfs.ext4 -F "$ROOT_PART" && echo -e "${GREEN}✓ Root formatted${NC}"
+        mkswap "$SWAP_PART" && echo -e "${GREEN}✓ Swap formatted${NC}"
+        [ -n "$HOME_PART" ] && mkfs.ext4 -F "$HOME_PART" && echo -e "${GREEN}✓ Home formatted${NC}"
         ;;
-
-    2)  # ==================== ADVANCED MANUAL MBR ====================
-        clear
-        echo -e "${RED}${BOLD}SHADOW MANUAL PARTITIONING (MBR ONLY)${NC}"
-        echo -e "${YELLOW}Buka cfdisk dulu untuk buat partisi, lalu set mount point${NC}"
-        echo ""
-        cfdisk "$TARGET_DISK"
-        sync; partprobe "$TARGET_DISK"; sleep 1
-
-        echo -e "${CYAN}┌──────────────────── PARTISI DETEKSI (MBR) ────────────────────┐${NC}"
-        lsblk -o NAME,SIZE,TYPE,FSTYPE "$TARGET_DISK"
-        echo -e "${CYAN}└──────────────────────────────────────────────────────────────┘${NC}"
-
-        declare -A MOUNTS
-        while true; do
-            echo -en "\n${YELLOW}Partisi (contoh /dev/sda1) [kosong = selesai]: ${NC}"
-            read -r part
-            [ -z "$part" ] && break
-            [[ ! -b "$part" ]] && { echo -e "${RED}Partisi tidak ditemukan!${NC}"; continue; }
-
-            echo -en "Mount point ( /  /home  swap ) : "
-            read -r mp
-            mp=$(echo "$mp" | xargs)
-            [[ "$mp" =~ ^(/|/home|swap)$ ]] && MOUNTS["$part"]="$mp" && echo -e "${GREEN}✓ $part → $mp${NC}"
-        done
-
-        ROOT_PART=$(for k in "${!MOUNTS[@]}"; do [[ ${MOUNTS[$k]} == "/" ]] && echo "$k"; done)
-        HOME_PART=$(for k in "${!MOUNTS[@]}"; do [[ ${MOUNTS[$k]} == "/home" ]] && echo "$k"; done)
-        SWAP_PART=$(for k in "${!MOUNTS[@]}"; do [[ ${MOUNTS[$k]} == "swap" ]] && echo "$k"; done)
-
-        # Format kalau user setuju
-        for p in "$ROOT_PART" "$HOME_PART"; do
-            [[ -n "$p" ]] && { 
-                echo -en "Format $p sebagai ext4? (yes): "; 
-                read f; [[ "${f,,}" == "yes" ]] && mkfs.ext4 -F "$p"; 
-            }
-        done
-        [[ -n "$SWAP_PART" ]] && { echo -en "Buat swap di $SWAP_PART? (yes): "; read s; [[ "${s,,}" == "yes" ]] && mkswap "$SWAP_PART"; }
-        ;;
-
-    3)
+    2)
         # Mode cfdisk klasik (seperti script asli)
         echo -e "${YELLOW}Membuka cfdisk untuk partisi manual (MBR)${NC}"
         cfdisk "$TARGET_DISK"
